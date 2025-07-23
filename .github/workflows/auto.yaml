@@ -33,10 +33,13 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@v5
         with:
-          title: "Hourly auto-update"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "Auto-update: ${{ github.run_id }}"
           body: "This pull request was generated automatically every hour."
+          commit-message: "Hourly auto-update"
           branch: auto/update-${{ github.run_id }}
           delete-branch: true
+          labels: auto-update
 
       - name: Enable Auto-Merge
         uses: peter-evans/enable-pull-request-automerge@v3
