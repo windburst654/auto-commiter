@@ -1,0 +1,45 @@
+name: Auto PR Hourly Merge
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # every hour
+  workflow_dispatch:      # manual trigger (optional)
+
+jobs:
+  auto-pr-merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Update file with timestamp
+        run: |
+          echo "Last updated: $(date)" > auto-update.txt
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit changes
+        run: |
+          git checkout -b auto/update-${{ github.run_id }}
+          git add auto-update.txt
+          git commit -m "Hourly auto-update: $(date)"
+          git push origin auto/update-${{ github.run_id }}
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          title: "Hourly auto-update"
+          body: "This pull request was generated automatically every hour."
+          branch: auto/update-${{ github.run_id }}
+          delete-branch: true
+
+      - name: Enable Auto-Merge
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          merge-method: squash
